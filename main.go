@@ -5,7 +5,9 @@ import (
 	"log"
 	"time"
 
+  "mikehaus/spoofify/auth"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // First we need to check if user is authorized
@@ -16,11 +18,20 @@ type model int
 
 type tickMsg time.Time
 
+var (
+	tickStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FAFAFA")).Background(lipgloss.Color("#7D56F4")).PaddingTop(2).PaddingBottom(4)
+)
+
 func main() {
 	p := tea.NewProgram(model(5), tea.WithAltScreen())
+  renderAuthList()
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func renderAuthList() {
+  auth.AuthWindow()
 }
 
 func (m model) Init() tea.Cmd {
@@ -47,7 +58,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return fmt.Sprintf("\n\n     Hi. This program will end in %d seconds...", m)
+	return tickStyle.Render(fmt.Sprintf("\n\n     Hi. This program will end in %d seconds...", m))
 }
 
 func tick() tea.Cmd {
