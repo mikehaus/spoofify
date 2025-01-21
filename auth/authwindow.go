@@ -1,8 +1,12 @@
-package auth 
+package auth
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
+	"os/exec"
+	"runtime"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -10,6 +14,11 @@ import (
 )
 
 var txtStyle = lipgloss.NewStyle().Margin(1, 2)
+
+var ENV_CLIENT_ID = os.Getenv("SPOTIFY_CLIENT_ID")
+var redirect_uri = "http://localhost:8080/callback"
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 type item struct {
 	title, desc string
@@ -38,6 +47,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
+		if msg.String() == "enter" {
+			return m, openBrowserAuth()
+		}
 	case tea.WindowSizeMsg:
 		h, v := txtStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
@@ -49,7 +61,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-  return txtStyle.Render(m.list.View())
+	return txtStyle.Render(m.list.View())
 }
 
 func AuthWindow() {
@@ -57,10 +69,10 @@ func AuthWindow() {
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
 
-  if _, err := p.Run(); err != nil {
-    fmt.Println("Error running program:", err)
-    os.Exit(1)
-  }
+	if _, err := p.Run(); err != nil {
+		fmt.Println("Error running program:", err)
+		os.Exit(1)
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -81,4 +93,37 @@ func initialModel() model {
 	m.list.Title = "Please select an option"
 
 	return m
+}
+
+func openBrowserAuth(url string) tea.Cmd {
+	// TODO: this is deprecated, should refactor in near term
+	rand.Seed(time.Now().UnixNano())
+
+	var state = randSeq(16)
+	var scope = "FILL IN SCOPE STR HERE"
+
+	var cmd string
+	var args []string
+
+	switch runtime.GOOS {
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start"}
+	case "darwin":
+		cmd = "open"
+	default: // "linux", "freebsd", "openbsd", "netbsd"
+		cmd = "xdg-open"
+	}
+	args = append(args, url)
+	exec.Command(cmd, args...).Start()
+	return nil
+}
+
+// Helper used to generate random state value for Spotify auth req
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
