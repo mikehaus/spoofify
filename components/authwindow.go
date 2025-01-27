@@ -1,24 +1,20 @@
-package auth
+package components 
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"os/exec"
 	"runtime"
-	"time"
 
+  "mikehaus/spoofify/helpers"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
+
 var txtStyle = lipgloss.NewStyle().Margin(1, 2)
 
-var ENV_CLIENT_ID = os.Getenv("SPOTIFY_CLIENT_ID")
-var redirect_uri = "http://localhost:8080/callback"
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 type item struct {
 	title, desc string
@@ -41,14 +37,15 @@ type model struct {
 	list     list.Model
 }
 
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
-			return m, tea.Quit
+			handleQuit(m)
 		}
 		if msg.String() == "enter" {
-			return m, openBrowserAuth()
+			handleSelection(m)
 		}
 	case tea.WindowSizeMsg:
 		h, v := txtStyle.GetFrameSize()
@@ -95,13 +92,29 @@ func initialModel() model {
 	return m
 }
 
-func openBrowserAuth(url string) tea.Cmd {
-	// TODO: this is deprecated, should refactor in near term
-	rand.Seed(time.Now().UnixNano())
+func handleSelection(m model) (tea.Model, tea.Cmd) {
+	if m.list.Index() == 0 {
+		return m, authWithSpotify()
+	}
 
-	var state = randSeq(16)
-	var scope = "FILL IN SCOPE STR HERE"
+	return handleQuit(m)
+}
 
+func handleQuit(m model) (tea.Model, tea.Cmd) {
+	return m, tea.Quit
+}
+
+// Create a get request with spotify
+func authWithSpotify() tea.Cmd {
+	// TODO: integrate this with Oauth2 client 
+  var CLIENT_ID = os.Getenv("SPOTIFY_CLIENT_ID")
+  var state = helpers.GetUriAuthState()
+
+  return authenticateSpotifyInBrowser()
+}
+
+// Opens default browser to spotify to log in to spotify 
+func authenticateSpotifyInBrowser() tea.Cmd {
 	var cmd string
 	var args []string
 
@@ -114,16 +127,7 @@ func openBrowserAuth(url string) tea.Cmd {
 	default: // "linux", "freebsd", "openbsd", "netbsd"
 		cmd = "xdg-open"
 	}
-	args = append(args, url)
+	args = append(args, helpers.GetAuthUrl())
 	exec.Command(cmd, args...).Start()
 	return nil
-}
-
-// Helper used to generate random state value for Spotify auth req
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
 }

@@ -5,11 +5,12 @@ import (
 	"log"
 	"time"
 
-  "mikehaus/spoofify/auth"
+  "mikehaus/spoofify/components"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
+// TODO: Refactor main window into its own component and make this just handle top level state and controller logic
 // First we need to check if user is authorized
 // If they are direct them to the main window
 // If not do signup flow
@@ -31,7 +32,7 @@ func main() {
 }
 
 func renderAuthList() {
-  auth.AuthWindow()
+  components.AuthWindow()
 }
 
 func (m model) Init() tea.Cmd {
