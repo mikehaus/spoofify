@@ -1,42 +1,57 @@
 package helpers
 
+// Util file to handle oauth2 initialization and config for Spotify
+
 import (
-  "time"
-	"math/rand"
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+
 	"golang.org/x/oauth2"
 )
 
 const (
-	SpotifyAuthUrl = "https://accounts.spotify.com/authorize?"
-	RedirectUri    = "http://localhost:8080/callback"
+	SpotifyAuthUrl  = "https://accounts.spotify.com/authorize?"
+	SpotifyTokenUrl = "https://accounts.spotify.com/api/token"
+	RedirectUri     = "http://localhost:8080/callback"
 )
 
 const (
-  ScopeStreaming = "streaming"
-  ScopeReadPlaylistPrivate = "playlist-read-private"
-  ScopePlaybackPosition = "user-read-playback-position"
+	ScopeStreaming           = "streaming"
+	ScopeReadPlaylistPrivate = "playlist-read-private"
+	ScopePlaybackPosition    = "user-read-playback-position"
 )
 
-func GetAuthUrl() string {
-  return SpotifyAuthUrl
-}
+// TODO: handle client and url separately
+func GetSpotifyOAuthClient() (*http.Client, string) {
+	ctx := context.Background()
 
-// TODO: May need to initialize this on the top level and move this up
-func initSeed() {
-  rand.Seed(time.Now().UnixNano())
-}
-
-func GetUriAuthState() string {
-  initSeed()
-	return randSeq(16)
-}
-
-// Helper used to generate random state value for Spotify auth req
-func randSeq(n int) string {
-  var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+	scopes := []string{
+		ScopeStreaming,
+		ScopePlaybackPosition,
+		ScopeReadPlaylistPrivate,
 	}
-	return string(b)
+
+	config := &oauth2.Config{
+		ClientID:     os.Getenv("SPOTIFY_CLIENT_ID"),
+		ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
+		Scopes:       scopes,
+		Endpoint:     oauth2.Endpoint{AuthURL: SpotifyAuthUrl, TokenURL: SpotifyTokenUrl},
+	}
+
+	verifier := oauth2.GenerateVerifier()
+	url := config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))
+
+	var code string
+	if _, err := fmt.Scan(&code); err != nil {
+		log.Fatal(err)
+	}
+	token, err := config.Exchange(ctx, code, oauth2.VerifierOption(verifier))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return config.Client(ctx, token), url
 }

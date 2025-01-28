@@ -1,4 +1,4 @@
-package components 
+package components
 
 import (
 	"fmt"
@@ -6,15 +6,13 @@ import (
 	"os/exec"
 	"runtime"
 
-  "mikehaus/spoofify/helpers"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"mikehaus/spoofify/helpers"
 )
 
-
 var txtStyle = lipgloss.NewStyle().Margin(1, 2)
-
 
 type item struct {
 	title, desc string
@@ -36,7 +34,6 @@ type model struct {
 	loggedIn bool
 	list     list.Model
 }
-
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -94,7 +91,7 @@ func initialModel() model {
 
 func handleSelection(m model) (tea.Model, tea.Cmd) {
 	if m.list.Index() == 0 {
-		return m, authWithSpotify()
+		return m, authenticateSpotifyInBrowser()
 	}
 
 	return handleQuit(m)
@@ -104,16 +101,7 @@ func handleQuit(m model) (tea.Model, tea.Cmd) {
 	return m, tea.Quit
 }
 
-// Create a get request with spotify
-func authWithSpotify() tea.Cmd {
-	// TODO: integrate this with Oauth2 client 
-  var CLIENT_ID = os.Getenv("SPOTIFY_CLIENT_ID")
-  var state = helpers.GetUriAuthState()
-
-  return authenticateSpotifyInBrowser()
-}
-
-// Opens default browser to spotify to log in to spotify 
+// Opens default browser to spotify to log in to spotify
 func authenticateSpotifyInBrowser() tea.Cmd {
 	var cmd string
 	var args []string
@@ -127,7 +115,12 @@ func authenticateSpotifyInBrowser() tea.Cmd {
 	default: // "linux", "freebsd", "openbsd", "netbsd"
 		cmd = "xdg-open"
 	}
-	args = append(args, helpers.GetAuthUrl())
+
+  // client, url := helpers.GetSpotifyOAuthClient()
+  // TODO: This isn't opening a url so need to figure that out
+  _, url := helpers.GetSpotifyOAuthClient()
+
+	args = append(args, url)
 	exec.Command(cmd, args...).Start()
 	return nil
 }
