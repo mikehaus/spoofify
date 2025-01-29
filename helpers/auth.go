@@ -24,7 +24,24 @@ const (
 	ScopePlaybackPosition    = "user-read-playback-position"
 )
 
-// TODO: handle client and url separately
+func GenerateSpotifyOAuthConfig() *oauth2.Config {
+	scopes := []string{
+		ScopeStreaming,
+		ScopePlaybackPosition,
+		ScopeReadPlaylistPrivate,
+	}
+
+	config := &oauth2.Config{
+		ClientID:     os.Getenv("SPOTIFY_CLIENT_ID"),
+		ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
+		Scopes:       scopes,
+		Endpoint:     oauth2.Endpoint{AuthURL: SpotifyAuthUrl, TokenURL: SpotifyTokenUrl},
+	}
+
+	return config
+}
+
+// TODO: handle client and url separately; this might be redundant
 func GetSpotifyOAuthClient() (*http.Client, string) {
 	ctx := context.Background()
 
