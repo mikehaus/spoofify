@@ -42,21 +42,8 @@ func GenerateSpotifyOAuthConfig() *oauth2.Config {
 }
 
 // TODO: handle client and url separately; this might be redundant
-func GetSpotifyOAuthClient() (*http.Client, string) {
+func GenerateSpotifyOAuthClient(config *oauth2.Config) (*http.Client, string) {
 	ctx := context.Background()
-
-	scopes := []string{
-		ScopeStreaming,
-		ScopePlaybackPosition,
-		ScopeReadPlaylistPrivate,
-	}
-
-	config := &oauth2.Config{
-		ClientID:     os.Getenv("SPOTIFY_CLIENT_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
-		Scopes:       scopes,
-		Endpoint:     oauth2.Endpoint{AuthURL: SpotifyAuthUrl, TokenURL: SpotifyTokenUrl},
-	}
 
 	verifier := oauth2.GenerateVerifier()
 	url := config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))

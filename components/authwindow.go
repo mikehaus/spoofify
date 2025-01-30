@@ -116,9 +116,8 @@ func authenticateSpotifyInBrowser() tea.Cmd {
 		cmd = "xdg-open"
 	}
 
-  // client, url := helpers.GetSpotifyOAuthClient()
   // TODO: This isn't opening a url so need to figure that out
-  _, url := helpers.GetSpotifyOAuthClient()
+  client, url := helpers.GenerateSpotifyOAuthClient()
 
 	args = append(args, url)
 	exec.Command(cmd, args...).Start()
