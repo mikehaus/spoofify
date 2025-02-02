@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"mikehaus/spoofify/helpers"
 	"net/http"
 	"time"
 )
@@ -34,9 +35,6 @@ func serve() http.Handler {
 
 // TODO: Need to make sure we generate a single client and single auth url
 func oauthSpotifyLogin(w http.ResponseWriter, r *http.Request) {
-	config := GenerateSpotifyOAuthConfig()
-	_, url := GenerateSpotifyOAuthClient(config)
-
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 

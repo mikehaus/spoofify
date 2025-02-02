@@ -31,10 +31,34 @@ func (i item) Description() string {
 }
 
 type model struct {
-	loggedIn bool
-	list     list.Model
+	loggedIn    bool
+	list        list.Model
+	SpotifyAuth *helpers.SpotifyAuth
 }
 
+type AuthWindow struct {
+	SpotifyAuth *helpers.SpotifyAuth
+}
+
+// MARK: External exports
+func NewAuthWindow() *AuthWindow {
+	return &AuthWindow{
+		SpotifyAuth: helpers.NewSpotifyAuth(),
+	}
+}
+
+func (w *AuthWindow) Render() {
+	m := initialModel()
+
+	p := tea.NewProgram(m, tea.WithAltScreen())
+
+	if _, err := p.Run(); err != nil {
+		fmt.Println("Error running program:", err)
+		os.Exit(1)
+	}
+}
+
+// MARK: View
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -56,17 +80,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	return txtStyle.Render(m.list.View())
-}
-
-func AuthWindow() {
-	m := initialModel()
-
-	p := tea.NewProgram(m, tea.WithAltScreen())
-
-	if _, err := p.Run(); err != nil {
-		fmt.Println("Error running program:", err)
-		os.Exit(1)
-	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -116,8 +129,8 @@ func authenticateSpotifyInBrowser() tea.Cmd {
 		cmd = "xdg-open"
 	}
 
-  // TODO: This isn't opening a url so need to figure that out
-  client, url := helpers.GenerateSpotifyOAuthClient()
+	// TODO: This isn't opening a url so need to figure that out
+	// client, url := helpers.GenerateSpotifyOAuthClient()
 
 	args = append(args, url)
 	exec.Command(cmd, args...).Start()

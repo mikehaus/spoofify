@@ -15,7 +15,7 @@ import (
 const (
 	SpotifyAuthUrl  = "https://accounts.spotify.com/authorize?"
 	SpotifyTokenUrl = "https://accounts.spotify.com/api/token"
-	RedirectUri     = "http://localhost:8080/callback"
+	RedirectUri     = "http://localhost:8080/auth/spotify/callback"
 )
 
 const (
@@ -24,7 +24,17 @@ const (
 	ScopePlaybackPosition    = "user-read-playback-position"
 )
 
-func GenerateSpotifyOAuthConfig() *oauth2.Config {
+type SpotifyAuth struct {
+	OauthConfig *oauth2.Config
+}
+
+func NewSpotifyAuth() *SpotifyAuth {
+	return &SpotifyAuth{
+		OauthConfig: SpotifyOAuthConfig(),
+	}
+}
+
+func SpotifyOAuthConfig() *oauth2.Config {
 	scopes := []string{
 		ScopeStreaming,
 		ScopePlaybackPosition,
@@ -34,6 +44,7 @@ func GenerateSpotifyOAuthConfig() *oauth2.Config {
 	config := &oauth2.Config{
 		ClientID:     os.Getenv("SPOTIFY_CLIENT_ID"),
 		ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
+		RedirectURL:  RedirectUri,
 		Scopes:       scopes,
 		Endpoint:     oauth2.Endpoint{AuthURL: SpotifyAuthUrl, TokenURL: SpotifyTokenUrl},
 	}
@@ -41,21 +52,21 @@ func GenerateSpotifyOAuthConfig() *oauth2.Config {
 	return config
 }
 
-// TODO: handle client and url separately; this might be redundant
-func GenerateSpotifyOAuthClient(config *oauth2.Config) (*http.Client, string) {
+func SpotifyOAuthUrl(config *oauth2.Config) string {
+	verifier := oauth2.GenerateVerifier()
+	return config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))
+}
+
+func SpotifyClient(config oauth2.Config) *http.Client {
 	ctx := context.Background()
 
-	verifier := oauth2.GenerateVerifier()
-	url := config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))
-
 	var code string
-	if _, err := fmt.Scan(&code); err != nil {
-		log.Fatal(err)
-	}
-	token, err := config.Exchange(ctx, code, oauth2.VerifierOption(verifier))
+	fmt.Scan(&code)
+
+	token, err := config.Exchange(ctx, code)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return config.Client(ctx, token), url
+	return config.Client(ctx, token)
 }
