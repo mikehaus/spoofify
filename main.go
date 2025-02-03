@@ -5,9 +5,11 @@ import (
 	"log"
 	"time"
 
+	"mikehaus/spoofify/components"
+	"mikehaus/spoofify/helpers"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"mikehaus/spoofify/components"
 )
 
 // TODO: Refactor main window into its own component and make this just handle top level state and controller logic
@@ -25,14 +27,16 @@ var (
 
 func main() {
 	p := tea.NewProgram(model(5), tea.WithAltScreen())
-	renderAuthList()
+	renderAuthWindow()
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func renderAuthList() {
-	authWindow := components.NewAuthWindow()
+func renderAuthWindow() {
+	s := helpers.NewSpotifyAuth()
+
+	authWindow := components.NewAuthWindow(s)
 	authWindow.Render()
 }
 

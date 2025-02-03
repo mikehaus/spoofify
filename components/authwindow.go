@@ -33,22 +33,23 @@ func (i item) Description() string {
 type model struct {
 	loggedIn    bool
 	list        list.Model
-	SpotifyAuth *helpers.SpotifyAuth
+	spotifyAuth *helpers.SpotifyAuth
 }
 
+// I need to expose a single auth
 type AuthWindow struct {
 	SpotifyAuth *helpers.SpotifyAuth
 }
 
 // MARK: External exports
-func NewAuthWindow() *AuthWindow {
+func NewAuthWindow(auth *helpers.SpotifyAuth) *AuthWindow {
 	return &AuthWindow{
-		SpotifyAuth: helpers.NewSpotifyAuth(),
+		SpotifyAuth: auth,
 	}
 }
 
 func (w *AuthWindow) Render() {
-	m := initialModel()
+	m := initialModel(w.SpotifyAuth)
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
 
@@ -86,15 +87,16 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-func initialModel() model {
+func initialModel(s *helpers.SpotifyAuth) model {
 	items := []list.Item{
 		item{title: "Login", desc: "Login with your Spotify login info"},
 		item{title: "Quit", desc: "Quit application"},
 	}
 
 	m := model{
-		loggedIn: false,
-		list:     list.New(items, list.NewDefaultDelegate(), 0, 0),
+		loggedIn:    false,
+		list:        list.New(items, list.NewDefaultDelegate(), 0, 0),
+		spotifyAuth: s,
 	}
 
 	m.list.Title = "Please select an option"
@@ -104,7 +106,7 @@ func initialModel() model {
 
 func handleSelection(m model) (tea.Model, tea.Cmd) {
 	if m.list.Index() == 0 {
-		return m, authenticateSpotifyInBrowser()
+		return m, authenticateSpotifyInBrowser(m.spotifyAuth)
 	}
 
 	return handleQuit(m)
@@ -115,7 +117,7 @@ func handleQuit(m model) (tea.Model, tea.Cmd) {
 }
 
 // Opens default browser to spotify to log in to spotify
-func authenticateSpotifyInBrowser() tea.Cmd {
+func authenticateSpotifyInBrowser(auth *helpers.SpotifyAuth) tea.Cmd {
 	var cmd string
 	var args []string
 
@@ -131,6 +133,7 @@ func authenticateSpotifyInBrowser() tea.Cmd {
 
 	// TODO: This isn't opening a url so need to figure that out
 	// client, url := helpers.GenerateSpotifyOAuthClient()
+	url := auth.SpotifyOAuthUrl()
 
 	args = append(args, url)
 	exec.Command(cmd, args...).Start()

@@ -9,13 +9,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 )
 
 const (
 	SpotifyAuthUrl  = "https://accounts.spotify.com/authorize?"
 	SpotifyTokenUrl = "https://accounts.spotify.com/api/token"
-	RedirectUri     = "http://localhost:8080/auth/spotify/callback"
+	RedirectUri     = "localhost:8080/auth/spotify/callback"
 )
 
 const (
@@ -25,16 +26,21 @@ const (
 )
 
 type SpotifyAuth struct {
-	OauthConfig *oauth2.Config
+	Config *oauth2.Config
 }
 
 func NewSpotifyAuth() *SpotifyAuth {
 	return &SpotifyAuth{
-		OauthConfig: SpotifyOAuthConfig(),
+		Config: SpotifyOAuthConfig(),
 	}
 }
 
 func SpotifyOAuthConfig() *oauth2.Config {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	scopes := []string{
 		ScopeStreaming,
 		ScopePlaybackPosition,
@@ -52,21 +58,21 @@ func SpotifyOAuthConfig() *oauth2.Config {
 	return config
 }
 
-func SpotifyOAuthUrl(config *oauth2.Config) string {
+func (auth *SpotifyAuth) SpotifyOAuthUrl() string {
 	verifier := oauth2.GenerateVerifier()
-	return config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))
+	return auth.Config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))
 }
 
-func SpotifyClient(config oauth2.Config) *http.Client {
+func (auth *SpotifyAuth) SpotifyClient() *http.Client {
 	ctx := context.Background()
 
 	var code string
 	fmt.Scan(&code)
 
-	token, err := config.Exchange(ctx, code)
+	token, err := auth.Config.Exchange(ctx, code)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return config.Client(ctx, token)
+	return auth.Config.Client(ctx, token)
 }

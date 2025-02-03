@@ -7,19 +7,18 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"mikehaus/spoofify/helpers"
 	"net/http"
 	"time"
 )
 
-func server() {
+func InitServer() {
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":8080"),
 		Handler: serve(),
 	}
 
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatal("%v", err)
+		log.Fatal(err)
 	}
 }
 
@@ -35,7 +34,7 @@ func serve() http.Handler {
 
 // TODO: Need to make sure we generate a single client and single auth url
 func oauthSpotifyLogin(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	// http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
 func oauthSpotifyCallback(w http.ResponseWriter, r *http.Request) {
