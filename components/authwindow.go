@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"mikehaus/spoofify/helpers"
+  "mikehaus/spoofify/helpers"
 )
 
 var txtStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -99,7 +99,7 @@ func initialModel(s *helpers.SpotifyAuth) model {
 		spotifyAuth: s,
 	}
 
-	m.list.Title = "Please select an option"
+	m.list.Title = "Please login to use Spoofify"
 
 	return m
 }

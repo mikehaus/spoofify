@@ -11,6 +11,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.7.0 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/keybase/go-keychain v0.0.0-20250107162724-3747e5bfbb71 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

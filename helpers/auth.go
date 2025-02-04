@@ -4,7 +4,6 @@ package helpers
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -27,6 +26,7 @@ const (
 
 type SpotifyAuth struct {
 	Config *oauth2.Config
+	Token  *oauth2.Token
 }
 
 func NewSpotifyAuth() *SpotifyAuth {
@@ -63,16 +63,22 @@ func (auth *SpotifyAuth) SpotifyOAuthUrl() string {
 	return auth.Config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))
 }
 
-func (auth *SpotifyAuth) SpotifyClient() *http.Client {
+func (auth *SpotifyAuth) SpotifyClient(ctx context.Context, token *oauth2.Token) *http.Client {
+	return auth.Config.Client(ctx, token)
+}
+
+func (auth *SpotifyAuth) SpotifyAuthCallback(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
-	var code string
-	fmt.Scan(&code)
+	code := r.URL.Query().Get("code")
 
 	token, err := auth.Config.Exchange(ctx, code)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return auth.Config.Client(ctx, token)
+	auth.Token = token
+
+  // client := auth.Config.Client(ctx, token)
+  // TODO: Do stuff with client below
 }

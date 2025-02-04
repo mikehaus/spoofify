@@ -27,16 +27,18 @@ var (
 
 func main() {
 	p := tea.NewProgram(model(5), tea.WithAltScreen())
-	renderAuthWindow()
+
+	// TODO: I'm probably going to use singleton to ensure I'm not creating a new auth every time
+	spotifyAuth := helpers.NewSpotifyAuth()
+	renderAuthWindow(spotifyAuth)
+	helpers.InitServer(spotifyAuth)
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func renderAuthWindow() {
-	s := helpers.NewSpotifyAuth()
-
-	authWindow := components.NewAuthWindow(s)
+func renderAuthWindow(auth *helpers.SpotifyAuth) {
+	authWindow := components.NewAuthWindow(auth)
 	authWindow.Render()
 }
 

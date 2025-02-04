@@ -11,10 +11,10 @@ import (
 	"time"
 )
 
-func InitServer() {
+func InitServer(auth *SpotifyAuth) {
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":8080"),
-		Handler: serve(),
+		Handler: serve(auth),
 	}
 
 	if err := server.ListenAndServe(); err != nil {
@@ -22,12 +22,12 @@ func InitServer() {
 	}
 }
 
-func serve() http.Handler {
+func serve(auth *SpotifyAuth) http.Handler {
 	mux := http.NewServeMux()
 
 	// oauth Spotify handlers
 	mux.HandleFunc("/auth/spotify/login", oauthSpotifyLogin)
-	mux.HandleFunc("/auth/spotify/callback", oauthSpotifyCallback)
+	mux.HandleFunc("/auth/spotify/callback", auth.SpotifyAuthCallback)
 
 	return mux
 }
@@ -37,16 +37,9 @@ func oauthSpotifyLogin(w http.ResponseWriter, r *http.Request) {
 	// http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
+// I need to get the auth in here so I can 
 func oauthSpotifyCallback(w http.ResponseWriter, r *http.Request) {
-	oauthState, _ := r.Cookie("oauthstate")
 
-	if r.FormValue("state") != oauthState.Value {
-		log.Println("invalid oauth state")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	// TODO: get data here
 }
 
 // TODO: may not need cookie?
