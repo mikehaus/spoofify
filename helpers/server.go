@@ -26,20 +26,10 @@ func serve(auth *SpotifyAuth) http.Handler {
 	mux := http.NewServeMux()
 
 	// oauth Spotify handlers
-	mux.HandleFunc("/auth/spotify/login", oauthSpotifyLogin)
+	mux.HandleFunc("/auth/spotify/login", auth.HandleSpotifyLogin)
 	mux.HandleFunc("/auth/spotify/callback", auth.SpotifyAuthCallback)
 
 	return mux
-}
-
-// TODO: Need to make sure we generate a single client and single auth url
-func oauthSpotifyLogin(w http.ResponseWriter, r *http.Request) {
-	// http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
-// I need to get the auth in here so I can 
-func oauthSpotifyCallback(w http.ResponseWriter, r *http.Request) {
-
 }
 
 // TODO: may not need cookie?

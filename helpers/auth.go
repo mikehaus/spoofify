@@ -4,18 +4,21 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/spotify"
 )
 
 const (
-	SpotifyAuthUrl  = "https://accounts.spotify.com/authorize?"
-	SpotifyTokenUrl = "https://accounts.spotify.com/api/token"
-	RedirectUri     = "localhost:8080/auth/spotify/callback"
+	// SpotifyAuthUrl  = "https://accounts.spotify.com/authorize?"
+	// SpotifyTokenUrl = "https://accounts.spotify.com/api/token"
+	RedirectUri = "localhost:8080/auth/spotify/callback"
 )
 
 const (
@@ -25,13 +28,14 @@ const (
 )
 
 type SpotifyAuth struct {
-	Config *oauth2.Config
-	Token  *oauth2.Token
+	config *oauth2.Config
+	state  string
+	token  *oauth2.Token
 }
 
 func NewSpotifyAuth() *SpotifyAuth {
 	return &SpotifyAuth{
-		Config: SpotifyOAuthConfig(),
+		config: SpotifyOAuthConfig(),
 	}
 }
 
@@ -52,7 +56,8 @@ func SpotifyOAuthConfig() *oauth2.Config {
 		ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
 		RedirectURL:  RedirectUri,
 		Scopes:       scopes,
-		Endpoint:     oauth2.Endpoint{AuthURL: SpotifyAuthUrl, TokenURL: SpotifyTokenUrl},
+		// Endpoint:     oauth2.Endpoint{AuthURL: SpotifyAuthUrl, TokenURL: SpotifyTokenUrl},
+		Endpoint: spotify.Endpoint,
 	}
 
 	return config
@@ -60,25 +65,38 @@ func SpotifyOAuthConfig() *oauth2.Config {
 
 func (auth *SpotifyAuth) SpotifyOAuthUrl() string {
 	verifier := oauth2.GenerateVerifier()
-	return auth.Config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))
+	return auth.config.AuthCodeURL("state", oauth2.AccessTypeOnline, oauth2.S256ChallengeOption(verifier))
 }
 
-func (auth *SpotifyAuth) SpotifyClient(ctx context.Context, token *oauth2.Token) *http.Client {
-	return auth.Config.Client(ctx, token)
+func (auth *SpotifyAuth) SpotifyClient(ctx context.Context) *http.Client {
+	return auth.config.Client(ctx, auth.token)
+}
+
+func (auth *SpotifyAuth) HandleSpotifyLogin(w http.ResponseWriter, r *http.Request) {
+	url := auth.config.AuthCodeURL(auth.state)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
 func (auth *SpotifyAuth) SpotifyAuthCallback(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-
+	state := r.URL.Query().Get("state")
 	code := r.URL.Query().Get("code")
+	fmt.Printf("Found the code: %s", code)
 
-	token, err := auth.Config.Exchange(ctx, code)
-	if err != nil {
-		log.Fatal(err)
+	if state != auth.state {
+		http.Error(w, "Invalid State", http.StatusBadRequest)
+		return
 	}
 
-	auth.Token = token
+	token, err := auth.config.Exchange(context.Background(), code)
+	if err != nil {
+		http.Error(w, "Failed to exchange token", http.StatusInternalServerError)
+		log.Println("Token exchange error:", err)
+		return
+	}
 
-  // client := auth.Config.Client(ctx, token)
-  // TODO: Do stuff with client below
+	auth.token = token
+}
+
+func generateRandomState() string {
+	return fmt.Sprintf("%d", rand.Intn(100000))
 }
