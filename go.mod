@@ -1,8 +1,11 @@
 module mikehaus/spoofify
 
-go 1.21.1
+go 1.23
+
+toolchain go1.23.6
 
 require (
+	github.com/a-h/templ v0.3.833 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/bubbles v0.20.0 // indirect

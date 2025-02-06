@@ -5,11 +5,11 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+  "mikehaus/spoofify/helpers"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"mikehaus/spoofify/helpers"
 )
 
 var txtStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -106,7 +106,8 @@ func initialModel(s *helpers.SpotifyAuth) model {
 
 func handleSelection(m model) (tea.Model, tea.Cmd) {
 	if m.list.Index() == 0 {
-		return m, authenticateSpotifyInBrowser(m.spotifyAuth)
+		// return m, authenticateSpotifyInBrowser(m.spotifyAuth)
+    return m, authenticateSpotifyInBrowser()
 	}
 
 	return handleQuit(m)
@@ -118,7 +119,8 @@ func handleQuit(m model) (tea.Model, tea.Cmd) {
 
 // Opens default browser to spotify to log in to spotify
 // TODO: I need to open localhost to a template to login with spotify, then redirect to oauthurl, then redirect again to close browser on success
-func authenticateSpotifyInBrowser(auth *helpers.SpotifyAuth) tea.Cmd {
+// func authenticateSpotifyInBrowser(auth *helpers.SpotifyAuth) tea.Cmd {
+func authenticateSpotifyInBrowser() tea.Cmd {
 	var cmd string
 	var args []string
 
@@ -134,7 +136,8 @@ func authenticateSpotifyInBrowser(auth *helpers.SpotifyAuth) tea.Cmd {
 
 	// TODO: This isn't opening a url so need to figure that out
 	// client, url := helpers.GenerateSpotifyOAuthClient()
-	url := auth.SpotifyOAuthUrl()
+	// url := auth.SpotifyOAuthUrl()
+  url := "http://localhost:8080/auth/spotify/init"
 
 	args = append(args, url)
 	exec.Command(cmd, args...).Start()

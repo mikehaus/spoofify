@@ -32,6 +32,8 @@ func main() {
 	spotifyAuth := helpers.NewSpotifyAuth()
 	renderAuthWindow(spotifyAuth)
 	helpers.InitServer(spotifyAuth)
+  // TODO: initializing this here doesn't allow me to run the server until the window is closed
+  // need to find a way to run a server and the window concurrently
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}

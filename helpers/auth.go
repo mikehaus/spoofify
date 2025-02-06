@@ -73,7 +73,8 @@ func (auth *SpotifyAuth) SpotifyClient(ctx context.Context) *http.Client {
 }
 
 func (auth *SpotifyAuth) HandleSpotifyLogin(w http.ResponseWriter, r *http.Request) {
-	url := auth.config.AuthCodeURL(auth.state)
+	// url := auth.config.AuthCodeURL(auth.state)
+  url := auth.SpotifyOAuthUrl()
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
