@@ -1,12 +1,11 @@
 package views
 
-// this is possibly not necessary
-templ login(redirectUri string) {
-<div class="container">
-  <h1>Spotify Login</h1>
-  <form id="spotify-login-form">
-    <a id="login-button" href={templ.URL(redirectUri)}>Login with Spotify</a>
-    <p id="error-message"></p>
-  </form>
-</div>
+// TODO: Need to sanitize my redirect url or move it to spotify auth
+templ Login(redirectUri string) {
+  <div class="container">
+    <h1>Spotify Login</h1>
+    <form id="spotify-login-form">
+      <a id="login-button" href={ templ.URL(redirectUri) }>Login with Spotify</a>
+    </form>
+  </div>
 }

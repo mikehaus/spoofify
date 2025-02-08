@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"mikehaus/spoofify/components"
-	"mikehaus/spoofify/helpers"
+  "mikehaus/spoofify/helpers"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -30,8 +30,8 @@ func main() {
 
 	// TODO: I'm probably going to use singleton to ensure I'm not creating a new auth every time
 	spotifyAuth := helpers.NewSpotifyAuth()
-	renderAuthWindow(spotifyAuth)
 	helpers.InitServer(spotifyAuth)
+	renderAuthWindow(spotifyAuth)
   // TODO: initializing this here doesn't allow me to run the server until the window is closed
   // need to find a way to run a server and the window concurrently
 	if _, err := p.Run(); err != nil {

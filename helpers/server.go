@@ -5,37 +5,29 @@ package helpers
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"log"
 	"mikehaus/spoofify/views"
 	"net/http"
 	"time"
 
-	"github.com/a-h/templ"
+  "github.com/a-h/templ"
+	"github.com/gorilla/mux"
 )
 
 func InitServer(auth *SpotifyAuth) {
-	// server := &http.Server{
-		// Addr:    fmt.Sprintf(":8080"),
-		// Handler: serve(auth),
-	// }
+	r := mux.NewRouter()
 
-	// if err := server.ListenAndServe(); err != nil {
-		// log.Fatal(err)
-	// }
-  http.Handle("/auth/spotify/init", templ.Handler(views.Login(auth.config.RedirectURL)))
+  // Spotify Routes
+	r.HandleFunc("/auth/spotify/login", auth.HandleSpotifyLogin).Methods("GET")
+	r.HandleFunc("/auth/spotify/callback", auth.SpotifyAuthCallback).Methods("GET")
 
-  mux := serve(auth)
-  http.ListenAndServe(":8080", mux)
-}
+  // templ generated component routes
+	r.Handle("/auth/spotify/init", templ.Handler(views.Login(auth.config.RedirectURL)))
 
-func serve(auth *SpotifyAuth) http.Handler {
-	mux := http.NewServeMux()
-
-	// oauth Spotify handlers
-  // mux.Handle("/auth/spotify/init", templ.Handler(views.Login(auth.config.RedirectURL)))
-	mux.HandleFunc("/auth/spotify/login", auth.HandleSpotifyLogin)
-	mux.HandleFunc("/auth/spotify/callback", auth.SpotifyAuthCallback)
-
-	return mux
+	// start on secondary thread to ensure it's not blocking. UI will run on main thread
+	go func() {
+		log.Fatal(http.ListenAndServe(":8080", r))
+	}()
 }
 
 // TODO: may not need cookie?
